@@ -1,3 +1,5 @@
+let img;
+let coloredImg;
 let coords = [];
 let state = {
   colorMode: 'white',
@@ -7,13 +9,48 @@ let state = {
   timer: 10,
   gameOver: false,
   showable: true,
-  highScore: 0
+  highScore: 0,
+  won: false
 };
 
-function setup() {
-  initialize = () => {
-    canvas = createCanvas(windowWidth, windowHeight);
+let url =
+  'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2227&q=80';
 
+function preload() {
+  img = loadImage(url);
+}
+
+function setup() {
+  canvas = createCanvas(windowWidth, windowHeight);
+  img.loadPixels();
+  let pixelsArray = Array.from(img.pixels);
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  for (let i = 0; i < pixelsArray.length; i += 4) {
+    r += pixelsArray[i];
+    g += pixelsArray[i + 1];
+    b += pixelsArray[i + 2];
+  }
+  let totalLength = pixelsArray.length / 4;
+  r = r / totalLength;
+  g = g / totalLength;
+  b = b / totalLength;
+
+  coloredImg = createImage(img.width, img.height);
+  coloredImg.loadPixels();
+  for (let x = 0; x < coloredImg.width; x++) {
+    for (let y = 0; y < coloredImg.height; y++) {
+      coloredImg.set(x, y, [r, g, b, 255]);
+    }
+  }
+  coloredImg.updatePixels();
+
+  console.log(r, g, b);
+
+  initialize = () => {
+    state.won = false;
     state.showable = true;
     coords = [];
     state.showable = true;
@@ -58,6 +95,7 @@ function draw() {
     textSize(30);
     text(`Score: ${state.score}`, 10, 30);
     text(`High Score: ${state.highScore}`, 400, 30);
+    text('Try to get more than 5!', 650, 30);
     text(`Timer: ${state.timer}`, 200, 30);
   } else {
     background(0);
@@ -66,6 +104,7 @@ function draw() {
     textSize(30);
     text(`Score: ${state.score}`, 10, 30);
     text(`High Score: ${state.highScore}`, 400, 30);
+    text('Try to get more than 5!', 650, 30);
     text(`Timer: ${state.timer}`, 200, 30);
   }
 
@@ -106,20 +145,30 @@ function draw() {
 
   if (state.timer === 0) {
     state.gameOver = true;
-    stroke(150, 255, 255);
-    fill(150, 255, 255);
+    stroke(0, 0, 0);
+    fill(255, 255, 255);
     textSize(30);
-    text(`Press Any Key To Restart`, windowWidth / 2 - 150, 30);
+    text(`Press Any Key To Restart`, windowWidth / 2 - 150, 250);
     textSize(40);
-    text('GAME OVER', windowWidth / 2 - 100, 200);
+    if (state.score > 0) {
+      image(img, 0, 0);
+      text(
+        'Congrats on making it this far! (Click Anywhere)',
+        windowWidth / 2 - 300,
+        200
+      );
+      state.won = true;
+    } else {
+      text('GAME OVER', windowWidth / 2 - 100, 400);
+    }
     noLoop();
   }
 
   if (state.curve2.length && state.curve1.length) {
-    stroke(150, 255, 255);
-    fill(150, 255, 255);
-    textSize(40);
-    text(`Great job!`, windowWidth / 2 - 150, 200);
+    stroke(0, 0, 0);
+    fill(255, 255, 255);
+    textSize(60);
+    text(`Great job!`, windowWidth / 2 - 150, 300);
   }
 }
 
@@ -132,6 +181,32 @@ function timerCountdown(on, time) {
 }
 
 function mousePressed() {
+  if (state.won) {
+    let randNum = Math.floor(Math.random() * 5);
+    switch (randNum) {
+      case 0: // Average Color
+        image(coloredImg, 0, 0);
+        break;
+      case 1: // Blue Hue
+        tint(0, 0, 255);
+        image(img, 0, 0);
+        noTint();
+        break;
+      case 2: // Green Hue
+        tint(0, 255, 0);
+        image(img, 0, 0);
+        noTint();
+        break;
+      case 3: // Red Hue
+        tint(255, 0, 0);
+        image(img, 0, 0);
+        noTint();
+        break;
+      case 4: // Original
+        image(img, 0, 0);
+        break;
+    }
+  }
   if (!state.showable) {
     for (coordinate of coords) {
       if (
@@ -146,7 +221,7 @@ function mousePressed() {
       }
     }
   }
-  
+
   if (state.curve2.length && state.curve1.length) {
     state.score++;
     if (state.score > state.highScore) {
