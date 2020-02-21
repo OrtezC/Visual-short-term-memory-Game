@@ -150,7 +150,7 @@ function draw() {
     textSize(30);
     text(`Press Any Key To Restart`, windowWidth / 2 - 150, 250);
     textSize(40);
-    if (state.score > 0) {
+    if (state.score >= 5) {
       image(img, 0, 0);
       text(
         'Congrats on making it this far! (Click Anywhere)',
